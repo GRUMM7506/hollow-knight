@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Hollow: Chronicles of the Abyss</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="hud-top">
+    <div id="hearts"></div>
+    <div id="mana-row">
+      <span id="mana-label">MANA</span>
+      <div id="mana-track"><div id="mana-fill"></div></div>
+    </div>
+    <div id="souls-hud">✦ 0</div>
+  </div>
+</div>
+
+<!-- Boss HP Bar -->
+<div id="boss-bar">
+  <div id="boss-name">✦ BOSS ✦</div>
+  <div id="boss-track"><div id="boss-fill" style="width:100%"></div></div>
+</div>
+
+<!-- Stamina (soul charges) -->
+<div id="stamina-bar"></div>
+
+<!-- Parry cooldown bar -->
+<div id="parry-bar" style="display:none;">
+  <span id="parry-label">ПАРИР</span>
+  <div id="parry-cd"><div id="parry-fill"></div></div>
+</div>
+
+<!-- Fullscreen toggle -->
+<div id="fs-btn" title="Полный экран">⛶</div>
+
+<!-- Mobile Controls -->
+<div id="controls">
+  <div id="dpad">
+    <div id="dpad-move">
+      <div class="btn" id="btn-left">◀</div>
+      <div class="btn" id="btn-right">▶</div>
+    </div>
+    <div id="dpad-extra">
+      <div class="btn" id="btn-slam">⬇⚔</div>
+    </div>
+  </div>
+  <div id="actions">
+    <div class="btn" id="btn-attack">⚔</div>
+    <div class="btn" id="btn-jump">↑</div>
+    <div class="btn" id="btn-dash">💨</div>
+    <div class="btn" id="btn-magic">✨</div>
+    <div class="btn" id="btn-heal">💚</div>
+    <div class="btn" id="btn-ult">☄</div>
+  </div>
+</div>
+
+<!-- Parry flash overlay -->
+<div id="parry-flash"></div>
+
+<!-- Bonfire popup — z-index выше controls, pointer-events включены -->
+<div id="bonfire-popup">
+  🔥 КОСТЁР —
+  <button id="bp-shop-btn">⚗ Магазин</button>
+  <div class="bp-hint">[ E — клавиша ]</div>
+</div>
+
+<!-- Main Menu -->
+<div class="overlay" id="main-menu">
+  <h1>HOLLOW</h1>
+  <div class="sub">— CHRONICLES OF THE ABYSS —</div>
+  <div class="tip">
+    ⚔ Z / X — удар &nbsp; Space — прыжок &nbsp; Shift — рывок<br>
+    ✨ C — магия (30 маны) &nbsp; F — лечение (100 маны) &nbsp; V — удар вниз<br>
+    ☄ R — Пустотный Взрыв (полная мана) &nbsp; ESC — пауза<br>
+    💀 Три зоны · Шесть типов врагов · Три босса · Магазин улучшений
+  </div>
+  <button class="menu-btn" id="start-btn" style="margin-top:16px;">ВОЙТИ В МИР</button>
+  <button class="menu-btn" id="main-ctrl-btn" style="margin-top:10px;opacity:.8;">⚙ УПРАВЛЕНИЕ</button>
+</div>
+
+<!-- World Map wrapper -->
+<div class="overlay hidden" id="world-map-screen"></div>
+
+<!-- Shop -->
+<div class="overlay hidden" id="shop-screen">
+  <h2>⚗ ЛАВКА ДУШ ⚗</h2>
+  <div class="sub">— Торговец Бездны —</div>
+  <div id="shop-souls">✦ Души: <span id="shop-souls-val">0</span></div>
+  <div id="shop-list"></div>
+  <button class="menu-btn" id="shop-close" style="margin-top:16px;color:#ffd700;border-color:#ffd700;">ЗАКРЫТЬ</button>
+</div>
+
+<!-- Pause -->
+<div class="overlay hidden" id="pause-screen">
+  <h2>— ПАУЗА —</h2>
+  <button class="menu-btn" id="pause-resume">▶ ПРОДОЛЖИТЬ</button>
+  <button class="menu-btn" id="pause-map" style="opacity:.8;">🗺 КАРТА МИРА</button>
+  <button class="menu-btn" id="pause-ctrl" style="opacity:.75;">⚙ УПРАВЛЕНИЕ</button>
+</div>
+
+<!-- Zone Clear / Death / Victory overlay -->
+<div class="overlay hidden" id="zone-clear">
+  <div style="color:#a0ffa0;text-align:center;">
+    <h1 style="font-family:Georgia,serif;font-size:clamp(28px,7vw,54px);letter-spacing:6px;text-shadow:0 0 30px #a0ffa0;">ЗОНА ПРОЙДЕНА</h1>
+    <p id="zone-clear-name" style="font-size:12px;letter-spacing:4px;opacity:.6;margin:8px 0 20px;font-family:monospace;"></p>
+    <div id="zone-clear-reward" style="font-size:13px;color:#ffd700;margin-bottom:16px;font-family:monospace;"></div>
+    <button class="menu-btn" id="zone-clear-btn" style="color:#a0ffa0;border-color:#a0ffa0;">→ КАРТА МИРА</button>
+  </div>
+</div>
+
+<!-- Zone Label (cinematic) -->
+<div id="zone-label">
+  <h2 id="zone-label-name"></h2>
+  <p id="zone-label-sub"></p>
+</div>
+
+<!-- Dialog box -->
+<div id="dialog-box">
+  <div id="dialog-npc">▸ НПС</div>
+  <div id="dialog-text"></div>
+  <div id="dialog-hint">[ Нажми Z/Enter/касание для продолжения ]</div>
+</div>
+
+<!-- Control Editor -->
+<div id="ctrl-editor" class="hidden">
+  <div id="ctrl-editor-inner">
+    <h2>⚙ УПРАВЛЕНИЕ</h2>
+    <div class="sub">Нажми кнопку — затем нажми нужную клавишу</div>
+    <div id="ctrl-bindings"></div>
+    <div id="ctrl-btn-layout">
+      <div class="ctrl-section">РАСПОЛОЖЕНИЕ КНОПОК (px от края)</div>
+      <div id="btn-positions"></div>
+    </div>
+    <button class="menu-btn" id="ctrl-editor-close">✓ СОХРАНИТЬ</button>
+  </div>
+</div>
+
+<!-- Scripts — порядок важен! -->
+<script src="js/engine.js"></script>
+<script src="js/levels.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/bosses.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
